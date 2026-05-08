@@ -6,6 +6,28 @@
   <title>MINESWEEPER.EXE</title>
 </head>
 <body>
-  <!-- Minesweeper game — work in progress -->
+  <div class="container">
+    <h1>MINESWEEPER</h1>
+    <p class="subtitle">// TERMINAL EDITION v1.0 //</p>
+
+    <div class="difficulty">
+      <button class="diff-btn active" data-diff="easy">EASY</button>
+      <button class="diff-btn" data-diff="medium">MEDIUM</button>
+      <button class="diff-btn" data-diff="hard">HARD</button>
+    </div>
+
+    <div class="game-panel">
+      <div class="hud">
+        <div class="hud-display" id="mine-counter">010</div>
+        <button class="new-game-btn" id="new-game">&#9672;</button>
+        <div class="hud-display" id="timer-display">000</div>
+      </div>
+      <div id="board"></div>
+    </div>
+
+    <div class="status-bar" id="status">
+      RIGHT-CLICK TO FLAG · LEFT-CLICK TO REVEAL
+    </div>
+  </div>
 </body>
 </html>
