@@ -4,18 +4,66 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MINESWEEPER.EXE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:         #080c08;
+      --panel:      #0b160b;
+      --border:     #1a4a1a;
+      --green:      #00ff41;
+      --green-dim:  #00aa2a;
+      --green-dark: #021502;
+      --red:        #ff3333;
+      --cell-size:  34px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    h1 {
+      font-family: 'VT323', monospace;
+      font-size: 52px;
+      color: var(--green);
+      text-shadow: 0 0 10px var(--green), 0 0 30px rgba(0,255,65,0.4);
+      letter-spacing: 8px;
+    }
+
+    .subtitle {
+      font-size: 10px;
+      color: var(--green-dim);
+      letter-spacing: 4px;
+      opacity: 0.7;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h1>MINESWEEPER</h1>
     <p class="subtitle">// TERMINAL EDITION v1.0 //</p>
-
     <div class="difficulty">
       <button class="diff-btn active" data-diff="easy">EASY</button>
       <button class="diff-btn" data-diff="medium">MEDIUM</button>
       <button class="diff-btn" data-diff="hard">HARD</button>
     </div>
-
     <div class="game-panel">
       <div class="hud">
         <div class="hud-display" id="mine-counter">010</div>
@@ -24,10 +72,7 @@
       </div>
       <div id="board"></div>
     </div>
-
-    <div class="status-bar" id="status">
-      RIGHT-CLICK TO FLAG · LEFT-CLICK TO REVEAL
-    </div>
+    <div class="status-bar" id="status">RIGHT-CLICK TO FLAG · LEFT-CLICK TO REVEAL</div>
   </div>
 </body>
 </html>
