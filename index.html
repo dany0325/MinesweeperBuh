@@ -17,50 +17,79 @@
       background: var(--bg); color: var(--green);
       font-family: 'Share Tech Mono', monospace;
       min-height: 100vh; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; padding: 20px;
+      align-items: center; justify-content: center;
+      padding: 20px; position: relative; overflow: hidden;
     }
-    .container { display: flex; flex-direction: column; align-items: center; gap: 14px; }
-    h1 {
-      font-family: 'VT323', monospace; font-size: 52px; color: var(--green);
-      text-shadow: 0 0 10px var(--green); letter-spacing: 8px;
+    body::after {
+      content: ''; position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.13) 2px, rgba(0,0,0,0.13) 4px);
+      pointer-events: none; z-index: 999;
     }
-    .subtitle { font-size: 10px; color: var(--green-dim); letter-spacing: 4px; }
-
-    /* Game panel */
-    .game-panel {
-      background: var(--panel);
-      border: 2px solid #1a3a1a;
-      padding: 14px;
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 50% 50%, rgba(0,30,0,0.25) 0%, rgba(0,0,0,0.65) 100%);
+      pointer-events: none; z-index: 0;
     }
-
-    /* Board grid */
-    #board {
-      display: grid;
-      gap: 2px;
-      background: #000;
-      border: 1px solid #152015;
+    .container { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    h1 { font-family: 'VT323', monospace; font-size: 52px; color: var(--green);
+         text-shadow: 0 0 10px var(--green), 0 0 30px rgba(0,255,65,0.4); letter-spacing: 8px; }
+    .subtitle { font-size: 10px; color: var(--green-dim); letter-spacing: 4px; opacity: 0.7; }
+    .difficulty { display: flex; gap: 3px; }
+    .diff-btn {
+      background: var(--green-dark); border: 1px solid #1a3a1a; color: #005518;
+      font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px;
+      padding: 5px 16px; cursor: pointer; transition: all 0.12s; text-transform: uppercase; outline: none;
     }
-
-    /* Cells */
+    .diff-btn:hover { border-color: var(--green-dim); color: var(--green-dim); }
+    .diff-btn.active { background: #062b0a; border-color: var(--green); color: var(--green);
+      text-shadow: 0 0 8px rgba(0,255,65,0.6); box-shadow: 0 0 8px rgba(0,255,65,0.2); }
+    .game-panel { background: var(--panel); border: 2px solid #1a3a1a; padding: 14px; }
+    .hud { display: flex; justify-content: space-between; align-items: center;
+           margin-bottom: 10px; padding: 6px 10px; background: #040904; border: 1px solid #152015; }
+    .hud-display { font-family: 'VT323', monospace; font-size: 38px; color: var(--red);
+      text-shadow: 0 0 12px rgba(255,50,50,0.6); min-width: 72px; text-align: center; letter-spacing: 2px; }
+    .new-game-btn {
+      background: #041004; border: 2px solid #1a4a1a; color: var(--green-dim);
+      font-size: 20px; width: 42px; height: 42px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.1s; outline: none;
+    }
+    .new-game-btn:hover { background: #062b0a; border-color: var(--green); color: var(--green); }
+    #board { display: grid; gap: 2px; background: #000; border: 1px solid #152015; }
     .cell {
       width: var(--cell-size); height: var(--cell-size);
       background: #0b1a0b; border: 1px solid #152015;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'VT323', monospace; font-size: 20px;
-      cursor: pointer; user-select: none;
-      transition: background 0.06s, border-color 0.06s;
+      font-family: 'VT323', monospace; font-size: 20px; cursor: pointer; user-select: none;
+      transition: background 0.06s;
     }
     .cell:hover:not(.revealed):not(.flagged) { background: #112611; border-color: #2a5a2a; }
-    .cell.revealed { background: #030803; border-color: #0a100a; cursor: default; }
-    .cell.flagged  { background: #120800; border-color: #2a1500; color: #ff8800; }
-    .cell.mine-hit { background: #2a0000 !important; border-color: var(--red) !important; }
+    .cell.revealed  { background: #030803; border-color: #0a100a; cursor: default; }
+    .cell.flagged   { background: #120800; border-color: #2a1500; color: #ff8800; text-shadow: 0 0 8px rgba(255,136,0,0.8); }
+    .cell.mine-hit  { background: #2a0000 !important; border-color: var(--red) !important; color: var(--red); }
     .cell.mine-show { background: #120303; color: #cc2222; }
+    .cell.wrong-flag { color: var(--red); }
+    .n1 { color: #33ff88; text-shadow: 0 0 8px rgba(51,255,136,0.7); }
+    .n2 { color: #33ccff; text-shadow: 0 0 8px rgba(51,204,255,0.7); }
+    .n3 { color: #ff4444; text-shadow: 0 0 8px rgba(255,68,68,0.7);  }
+    .n4 { color: #aa44ff; text-shadow: 0 0 8px rgba(170,68,255,0.7); }
+    .n5 { color: #ff8833; text-shadow: 0 0 8px rgba(255,136,51,0.7); }
+    .n6 { color: #33ffee; text-shadow: 0 0 8px rgba(51,255,238,0.7); }
+    .n7 { color: #ff44cc; text-shadow: 0 0 8px rgba(255,68,204,0.7); }
+    .n8 { color: #888888; text-shadow: 0 0 8px rgba(136,136,136,0.5);}
+    .status-bar { margin-top: 8px; font-size: 10px; color: var(--green-dim);
+      letter-spacing: 2px; text-align: center; min-height: 14px; }
+    .status-bar.win  { color: var(--green); text-shadow: 0 0 10px var(--green); animation: blink 0.9s infinite; }
+    .status-bar.lose { color: var(--red);   text-shadow: 0 0 10px var(--red); }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>MINESWEEPER</h1>
-    <p class="subtitle">// TERMINAL EDITION v1.0 //</p>
+    <div class="title-block">
+      <h1>MINESWEEPER</h1>
+      <div class="subtitle">// TERMINAL EDITION v1.0 //</div>
+    </div>
     <div class="difficulty">
       <button class="diff-btn active" data-diff="easy">EASY</button>
       <button class="diff-btn" data-diff="medium">MEDIUM</button>
@@ -74,7 +103,7 @@
       </div>
       <div id="board"></div>
     </div>
-    <div class="status-bar" id="status">RIGHT-CLICK TO FLAG · LEFT-CLICK TO REVEAL</div>
+    <div class="status-bar" id="status">RIGHT-CLICK TO FLAG · LEFT-CLICK TO REVEAL · DBL-CLICK TO CHORD</div>
   </div>
 </body>
 </html>
