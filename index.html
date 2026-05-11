@@ -114,9 +114,8 @@ const DIFF = {
   medium: { rows: 16, cols: 16, mines: 40 },
   hard:   { rows: 16, cols: 30, mines: 99 },
 };
-let cfg = DIFF.easy;
-let board = [];
-let gameState = 'idle';
+let cfg = DIFF.easy, board = [], gameState = 'idle', firstClick = true;
+let minesLeft = 0, elapsed = 0, timerID = null;
 
 const boardEl   = document.getElementById('board');
 const timerEl   = document.getElementById('timer-display');
@@ -124,18 +123,45 @@ const counterEl = document.getElementById('mine-counter');
 const statusEl  = document.getElementById('status');
 const newGameBtn = document.getElementById('new-game');
 
-const pad = n => String(Math.min(Math.max(n, -99), 999)).padStart(3, '0');
+const pad    = n => String(Math.min(Math.max(n,-99),999)).padStart(3,'0');
+const cellAt = (r, c) => boardEl.children[r * cfg.cols + c];
+
+function eachNeighbor(r, c, fn) {
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      const nr = r+dr, nc = c+dc;
+      if (nr >= 0 && nr < cfg.rows && nc >= 0 && nc < cfg.cols) fn(nr, nc);
+    }
+}
 
 function initBoard() {
-  gameState = 'idle';
-  counterEl.textContent = pad(cfg.mines);
-  timerEl.textContent = '000';
+  clearInterval(timerID);
+  elapsed = 0; firstClick = true; gameState = 'idle'; minesLeft = cfg.mines;
+  timerEl.textContent = '000'; counterEl.textContent = pad(minesLeft);
+  newGameBtn.textContent = '◈';
   board = Array.from({ length: cfg.rows }, (_, r) =>
-    Array.from({ length: cfg.cols }, (_, c) => ({
-      r, c, mine: false, flagged: false, revealed: false, number: 0
-    }))
+    Array.from({ length: cfg.cols }, (_, c) =>
+      ({ r, c, mine: false, flagged: false, revealed: false, number: 0 }))
   );
   renderBoard();
+}
+
+function placeMines(safeR, safeC) {
+  let placed = 0;
+  while (placed < cfg.mines) {
+    const r = Math.floor(Math.random() * cfg.rows);
+    const c = Math.floor(Math.random() * cfg.cols);
+    if (board[r][c].mine) continue;
+    if (Math.abs(r-safeR) <= 1 && Math.abs(c-safeC) <= 1) continue;
+    board[r][c].mine = true; placed++;
+  }
+  for (let r = 0; r < cfg.rows; r++)
+    for (let c = 0; c < cfg.cols; c++) {
+      if (board[r][c].mine) continue;
+      let n = 0; eachNeighbor(r, c, (nr,nc) => { if (board[nr][nc].mine) n++; });
+      board[r][c].number = n;
+    }
 }
 
 function renderBoard() {
@@ -145,16 +171,26 @@ function renderBoard() {
     for (let c = 0; c < cfg.cols; c++) {
       const el = document.createElement('div');
       el.className = 'cell';
+      el.addEventListener('click', () => onLeftClick(r, c));
+      el.addEventListener('contextmenu', e => { e.preventDefault(); onRightClick(r, c); });
       boardEl.appendChild(el);
     }
 }
 
+function onLeftClick(r, c) {
+  if (gameState === 'won' || gameState === 'lost') return;
+  if (firstClick) {
+    firstClick = false; gameState = 'playing'; placeMines(r, c);
+    timerID = setInterval(() => { elapsed++; timerEl.textContent = pad(Math.min(elapsed,999)); }, 1000);
+  }
+}
+
+function onRightClick(r, c) { /* flagging — next commit */ }
+
 document.querySelectorAll('.diff-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    cfg = DIFF[btn.dataset.diff];
-    initBoard();
+    btn.classList.add('active'); cfg = DIFF[btn.dataset.diff]; initBoard();
   });
 });
 newGameBtn.addEventListener('click', initBoard);
