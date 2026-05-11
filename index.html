@@ -107,3 +107,56 @@
   </div>
 </body>
 </html>
+<script>
+"use strict";
+const DIFF = {
+  easy:   { rows:  9, cols:  9, mines: 10 },
+  medium: { rows: 16, cols: 16, mines: 40 },
+  hard:   { rows: 16, cols: 30, mines: 99 },
+};
+let cfg = DIFF.easy;
+let board = [];
+let gameState = 'idle';
+
+const boardEl   = document.getElementById('board');
+const timerEl   = document.getElementById('timer-display');
+const counterEl = document.getElementById('mine-counter');
+const statusEl  = document.getElementById('status');
+const newGameBtn = document.getElementById('new-game');
+
+const pad = n => String(Math.min(Math.max(n, -99), 999)).padStart(3, '0');
+
+function initBoard() {
+  gameState = 'idle';
+  counterEl.textContent = pad(cfg.mines);
+  timerEl.textContent = '000';
+  board = Array.from({ length: cfg.rows }, (_, r) =>
+    Array.from({ length: cfg.cols }, (_, c) => ({
+      r, c, mine: false, flagged: false, revealed: false, number: 0
+    }))
+  );
+  renderBoard();
+}
+
+function renderBoard() {
+  boardEl.style.gridTemplateColumns = `repeat(${cfg.cols}, var(--cell-size))`;
+  boardEl.innerHTML = '';
+  for (let r = 0; r < cfg.rows; r++)
+    for (let c = 0; c < cfg.cols; c++) {
+      const el = document.createElement('div');
+      el.className = 'cell';
+      boardEl.appendChild(el);
+    }
+}
+
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    cfg = DIFF[btn.dataset.diff];
+    initBoard();
+  });
+});
+newGameBtn.addEventListener('click', initBoard);
+initBoard();
+</script>
