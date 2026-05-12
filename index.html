@@ -129,70 +129,86 @@ const cellAt = (r, c) => boardEl.children[r * cfg.cols + c];
 function eachNeighbor(r, c, fn) {
   for (let dr = -1; dr <= 1; dr++)
     for (let dc = -1; dc <= 1; dc++) {
-      if (dr === 0 && dc === 0) continue;
-      const nr = r+dr, nc = c+dc;
-      if (nr >= 0 && nr < cfg.rows && nc >= 0 && nc < cfg.cols) fn(nr, nc);
+      if (dr===0 && dc===0) continue;
+      const nr=r+dr, nc=c+dc;
+      if (nr>=0 && nr<cfg.rows && nc>=0 && nc<cfg.cols) fn(nr,nc);
     }
 }
 
 function initBoard() {
-  clearInterval(timerID);
-  elapsed = 0; firstClick = true; gameState = 'idle'; minesLeft = cfg.mines;
-  timerEl.textContent = '000'; counterEl.textContent = pad(minesLeft);
-  newGameBtn.textContent = '◈';
-  board = Array.from({ length: cfg.rows }, (_, r) =>
-    Array.from({ length: cfg.cols }, (_, c) =>
-      ({ r, c, mine: false, flagged: false, revealed: false, number: 0 }))
-  );
+  clearInterval(timerID); elapsed=0; firstClick=true; gameState='idle'; minesLeft=cfg.mines;
+  timerEl.textContent='000'; counterEl.textContent=pad(minesLeft);
+  statusEl.textContent='RIGHT-CLICK TO FLAG · LEFT-CLICK TO REVEAL';
+  statusEl.className='status-bar'; newGameBtn.textContent='◈';
+  board = Array.from({length:cfg.rows},(_,r)=>Array.from({length:cfg.cols},(_,c)=>
+    ({r,c,mine:false,flagged:false,revealed:false,number:0})));
   renderBoard();
 }
 
 function placeMines(safeR, safeC) {
-  let placed = 0;
-  while (placed < cfg.mines) {
-    const r = Math.floor(Math.random() * cfg.rows);
-    const c = Math.floor(Math.random() * cfg.cols);
-    if (board[r][c].mine) continue;
-    if (Math.abs(r-safeR) <= 1 && Math.abs(c-safeC) <= 1) continue;
-    board[r][c].mine = true; placed++;
+  let placed=0;
+  while(placed<cfg.mines){
+    const r=Math.floor(Math.random()*cfg.rows), c=Math.floor(Math.random()*cfg.cols);
+    if(board[r][c].mine||( Math.abs(r-safeR)<=1&&Math.abs(c-safeC)<=1)) continue;
+    board[r][c].mine=true; placed++;
   }
-  for (let r = 0; r < cfg.rows; r++)
-    for (let c = 0; c < cfg.cols; c++) {
-      if (board[r][c].mine) continue;
-      let n = 0; eachNeighbor(r, c, (nr,nc) => { if (board[nr][nc].mine) n++; });
-      board[r][c].number = n;
+  for(let r=0;r<cfg.rows;r++) for(let c=0;c<cfg.cols;c++){
+    if(board[r][c].mine) continue;
+    let n=0; eachNeighbor(r,c,(nr,nc)=>{if(board[nr][nc].mine)n++;});
+    board[r][c].number=n;
+  }
+}
+
+function revealCell(r, c) {
+  const cell=board[r][c];
+  if(cell.revealed||cell.flagged) return;
+  cell.revealed=true;
+  const el=cellAt(r,c); el.classList.add('revealed');
+  if(cell.mine){ el.classList.add('mine-hit'); el.textContent='✸'; gameLost(); return; }
+  if(cell.number>0){ el.textContent=cell.number; el.classList.add(`n${cell.number}`); }
+  else eachNeighbor(r,c,(nr,nc)=>revealCell(nr,nc));
+}
+
+function gameLost() {
+  gameState='lost'; clearInterval(timerID);
+  statusEl.textContent='✸ DETONATION DETECTED ✸'; statusEl.className='status-bar lose';
+  newGameBtn.textContent='◌';
+  for(let r=0;r<cfg.rows;r++) for(let c=0;c<cfg.cols;c++){
+    const cell=board[r][c];
+    if(cell.mine&&!cell.flagged&&!cell.revealed){
+      cell.revealed=true; const el=cellAt(r,c);
+      el.classList.add('revealed','mine-show'); el.textContent='✸';
     }
+  }
 }
 
 function renderBoard() {
-  boardEl.style.gridTemplateColumns = `repeat(${cfg.cols}, var(--cell-size))`;
-  boardEl.innerHTML = '';
-  for (let r = 0; r < cfg.rows; r++)
-    for (let c = 0; c < cfg.cols; c++) {
-      const el = document.createElement('div');
-      el.className = 'cell';
-      el.addEventListener('click', () => onLeftClick(r, c));
-      el.addEventListener('contextmenu', e => { e.preventDefault(); onRightClick(r, c); });
-      boardEl.appendChild(el);
-    }
-}
-
-function onLeftClick(r, c) {
-  if (gameState === 'won' || gameState === 'lost') return;
-  if (firstClick) {
-    firstClick = false; gameState = 'playing'; placeMines(r, c);
-    timerID = setInterval(() => { elapsed++; timerEl.textContent = pad(Math.min(elapsed,999)); }, 1000);
+  boardEl.style.gridTemplateColumns=`repeat(${cfg.cols},var(--cell-size))`;
+  boardEl.innerHTML='';
+  for(let r=0;r<cfg.rows;r++) for(let c=0;c<cfg.cols;c++){
+    const el=document.createElement('div'); el.className='cell';
+    el.addEventListener('click',()=>onLeftClick(r,c));
+    el.addEventListener('contextmenu',e=>{e.preventDefault();});
+    boardEl.appendChild(el);
   }
 }
 
-function onRightClick(r, c) { /* flagging — next commit */ }
+function onLeftClick(r, c) {
+  if(gameState==='won'||gameState==='lost') return;
+  if(board[r][c].flagged) return;
+  if(firstClick){
+    firstClick=false; gameState='playing'; placeMines(r,c);
+    timerID=setInterval(()=>{elapsed++;timerEl.textContent=pad(Math.min(elapsed,999));},1000);
+  }
+  revealCell(r,c);
+}
 
-document.querySelectorAll('.diff-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active'); cfg = DIFF[btn.dataset.diff]; initBoard();
+document.querySelectorAll('.diff-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); cfg=DIFF[btn.dataset.diff]; initBoard();
   });
 });
-newGameBtn.addEventListener('click', initBoard);
+newGameBtn.addEventListener('click',initBoard);
 initBoard();
 </script>
